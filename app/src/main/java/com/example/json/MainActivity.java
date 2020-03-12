@@ -1,21 +1,17 @@
 package com.example.json;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.JsonReader;
 import android.util.Log;
-import android.util.Pair;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -80,7 +76,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         String[] coordinates = getCoordinates("Bihar");
-        getWeather(coordinates);
+        if (coordinates != null) {
+            String[] temperatureInfo = getWeather(coordinates);
+        }
     }
 
     public static String[] getCoordinates(String query) {
@@ -102,17 +100,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void getWeather(String[] coordinates){
+    public String[] getWeather(String[] coordinates){
         DownloadWeather newWeather = new DownloadWeather();
         String latitude, longitude;
         longitude = coordinates[0];
         latitude = coordinates[1];
         try {
             String weatherAPIResponse = newWeather.execute(String.format("https://api.darksky.net/forecast/b0422226b6861e4c519e5a9de9945162/%s,%s?units=si", latitude, longitude)).get();
-            Log.i("dekhi", weatherAPIResponse);
+            JSONObject jsonObject = new JSONObject(weatherAPIResponse);
+            String currently = jsonObject.getString("currently");
+            JSONObject currentlyObject = new JSONObject(currently);
+            String summary = currentlyObject.getString("summary");
+            String temperature = currentlyObject.getString("temperature");
+            return new String[]{temperature, summary};
         }
         catch (Exception e){
             e.printStackTrace();
+            return null;
         }
     }
 }
